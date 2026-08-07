@@ -1,0 +1,63 @@
+# =========================
+# Python virtual environment
+# =========================
+venv/
+env/
+.venv/
+
+
+# =========================
+# Python cache files
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# =========================
+# Environment variables / secrets
+# =========================
+.env
+.env.*
+
+
+# =========================
+# IDE files
+# =========================
+.idea/
+.vscode/
+
+
+# =========================
+# Testing and coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+
+# =========================
+# Logs
+# =========================
+*.log
+
+
+# =========================
+# Build files
+# =========================
+build/
+dist/
+*.egg-info/
+
+
+# =========================
+# Jupyter Notebook files
+# =========================
+.ipynb_checkpoints/
+
+
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+Thumbs.db
