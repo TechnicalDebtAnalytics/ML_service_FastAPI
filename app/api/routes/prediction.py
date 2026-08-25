@@ -1,43 +1,52 @@
-# api/routes/prediction.py
+"""REST API routes for synchronous predictions, debugging, and testing."""
 
-# This is the one part of your original structure that I would not consider essential.
+from fastapi import APIRouter, HTTPException, status
+from app.schemas.prediction_request import (
+    ClassMetricInput,
+    PredictionJobRequest,
+    SATDCommentRequest,
+)
+from app.schemas.prediction_response import (
+    ClassPredictionResponse,
+    PredictionJobResponse,
+    SATDDetectionResponse,
+)
+from app.services.prediction_service import prediction_service
 
-# Your actual production flow is:
+router = APIRouter(prefix="/api/v1/predict", tags=["Predictions"])
 
-# Application Backend
-#        ↓
-# RabbitMQ
-#        ↓
-# FastAPI ML Service
 
-# not:
+@router.post("/satd", response_model=SATDDetectionResponse, status_code=status.HTTP_200_OK)
+def predict_satd_comment(request: SATDCommentRequest) -> SATDDetectionResponse:
+    """Classify a single source code comment for Self-Admitted Technical Debt (SATD)."""
+    try:
+        return prediction_service.predict_satd_comment(request.comment)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"SATD classification failed: {str(e)}"
+        )
 
-# Application Backend
-#        ↓
-# POST /predict
-#        ↓
-# FastAPI
 
-# Therefore, you don't need an HTTP /predict endpoint for the main system.
+@router.post("/class", response_model=ClassPredictionResponse, status_code=status.HTTP_200_OK)
+def predict_class_metrics(class_input: ClassMetricInput) -> ClassPredictionResponse:
+    """Predict bug defect probability and classify comments for a single class."""
+    try:
+        return prediction_service.predict_class(class_input)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Class prediction failed: {str(e)}"
+        )
 
-# However, I would still keep an API layer for:
-# Health checks
-# Testing
-# Debugging
-# Docker/Kubernetes health probes
 
-# For example:
-
-# GET /health
-
-# You could therefore change it to:
-
-# api/
-# └── routes/
-#     └── health.py
-
-# If you want a manual prediction endpoint for development/testing, then keeping:
-
-# prediction.py
-
-# is perfectly fine.
+@router.post("/job", response_model=PredictionJobResponse, status_code=status.HTTP_200_OK)
+def predict_analysis_job(job_request: PredictionJobRequest) -> PredictionJobResponse:
+    """Batch execute bug and SATD predictions for all classes in an analysis job."""
+    try:
+        return prediction_service.predict_job(job_request)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Analysis job prediction failed: {str(e)}"
+        )

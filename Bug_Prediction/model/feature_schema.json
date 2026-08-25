@@ -1,0 +1,37 @@
+{
+  "feature_names": [
+    "cbo",
+    "dit",
+    "fanIn",
+    "fanOut",
+    "lcom",
+    "noc",
+    "numberOfAttributes",
+    "numberOfLinesOfCode",
+    "numberOfMethods",
+    "numberOfPrivateAttributes",
+    "numberOfPrivateMethods",
+    "numberOfPublicAttributes",
+    "numberOfPublicMethods",
+    "rfc",
+    "wmc",
+    "numberOfVersionsUntil",
+    "numberOfAuthorsUntil",
+    "linesAddedUntil",
+    "maxLinesAddedUntil",
+    "avgLinesAddedUntil",
+    "linesRemovedUntil",
+    "maxLinesRemovedUntil",
+    "avgLinesRemovedUntil",
+    "codeChurnUntil",
+    "maxCodeChurnUntil",
+    "avgCodeChurnUntil",
+    "ageWithRespectTo",
+    "weightedAgeWithRespectTo"
+  ],
+  "feature_count": 28,
+  "feature_aliases": {
+    "fanin": "fanIn",
+    "fanout": "fanOut"
+  }
+}

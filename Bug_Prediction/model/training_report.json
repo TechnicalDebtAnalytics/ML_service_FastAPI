@@ -1,0 +1,262 @@
+{
+  "dataset_audit": {
+    "original_row_count": 5371,
+    "input_feature_count": 28,
+    "project_count": 5,
+    "missing_value_count": 0,
+    "missing_values_by_column": {},
+    "infinite_value_count": 0,
+    "duplicate_feature_rows": 134,
+    "original_class_distribution": {
+      "total": 5371,
+      "defective": 853,
+      "non_defective": 4518,
+      "defective_percentage": 15.8816,
+      "non_defective_percentage": 84.1184
+    }
+  },
+  "duplicate_handling": {
+    "conflict_policy": "exclude",
+    "conflicting_feature_vectors": 4,
+    "conflicting_affected_rows": 19,
+    "conflicting_duplicate_details": [
+      {
+        "feature_values": {
+          "cbo": 2,
+          "dit": 1,
+          "fanIn": 1,
+          "fanOut": 1,
+          "lcom": 1,
+          "noc": 0,
+          "numberOfAttributes": 2,
+          "numberOfLinesOfCode": 9,
+          "numberOfMethods": 2,
+          "numberOfPrivateAttributes": 2,
+          "numberOfPrivateMethods": 1,
+          "numberOfPublicAttributes": 0,
+          "numberOfPublicMethods": 1,
+          "rfc": 3,
+          "wmc": 2,
+          "numberOfVersionsUntil": 2,
+          "numberOfAuthorsUntil": 1,
+          "linesAddedUntil": 1,
+          "maxLinesAddedUntil": 1,
+          "avgLinesAddedUntil": 0.5,
+          "linesRemovedUntil": 1,
+          "maxLinesRemovedUntil": 1,
+          "avgLinesRemovedUntil": 0.5,
+          "codeChurnUntil": 0,
+          "maxCodeChurnUntil": 0,
+          "avgCodeChurnUntil": 0.0,
+          "ageWithRespectTo": 19.8571,
+          "weightedAgeWithRespectTo": 2.0
+        },
+        "row_count": 9,
+        "defect_labels": [
+          0,
+          1
+        ],
+        "source_row_indexes": [
+          67,
+          107,
+          134,
+          306,
+          505,
+          1169,
+          1206,
+          1255,
+          1498
+        ]
+      },
+      {
+        "feature_values": {
+          "cbo": 3,
+          "dit": 1,
+          "fanIn": 2,
+          "fanOut": 1,
+          "lcom": 1,
+          "noc": 0,
+          "numberOfAttributes": 2,
+          "numberOfLinesOfCode": 9,
+          "numberOfMethods": 2,
+          "numberOfPrivateAttributes": 2,
+          "numberOfPrivateMethods": 1,
+          "numberOfPublicAttributes": 0,
+          "numberOfPublicMethods": 1,
+          "rfc": 3,
+          "wmc": 2,
+          "numberOfVersionsUntil": 2,
+          "numberOfAuthorsUntil": 1,
+          "linesAddedUntil": 1,
+          "maxLinesAddedUntil": 1,
+          "avgLinesAddedUntil": 0.5,
+          "linesRemovedUntil": 1,
+          "maxLinesRemovedUntil": 1,
+          "avgLinesRemovedUntil": 0.5,
+          "codeChurnUntil": 0,
+          "maxCodeChurnUntil": 0,
+          "avgCodeChurnUntil": 0.0,
+          "ageWithRespectTo": 19.8571,
+          "weightedAgeWithRespectTo": 2.0
+        },
+        "row_count": 6,
+        "defect_labels": [
+          0,
+          1
+        ],
+        "source_row_indexes": [
+          222,
+          329,
+          522,
+          730,
+          1022,
+          1493
+        ]
+      },
+      {
+        "feature_values": {
+          "cbo": 5,
+          "dit": 1,
+          "fanIn": 4,
+          "fanOut": 1,
+          "lcom": 1,
+          "noc": 0,
+          "numberOfAttributes": 2,
+          "numberOfLinesOfCode": 9,
+          "numberOfMethods": 2,
+          "numberOfPrivateAttributes": 2,
+          "numberOfPrivateMethods": 1,
+          "numberOfPublicAttributes": 0,
+          "numberOfPublicMethods": 1,
+          "rfc": 3,
+          "wmc": 2,
+          "numberOfVersionsUntil": 2,
+          "numberOfAuthorsUntil": 1,
+          "linesAddedUntil": 1,
+          "maxLinesAddedUntil": 1,
+          "avgLinesAddedUntil": 0.5,
+          "linesRemovedUntil": 1,
+          "maxLinesRemovedUntil": 1,
+          "avgLinesRemovedUntil": 0.5,
+          "codeChurnUntil": 0,
+          "maxCodeChurnUntil": 0,
+          "avgCodeChurnUntil": 0.0,
+          "ageWithRespectTo": 19.8571,
+          "weightedAgeWithRespectTo": 2.0
+        },
+        "row_count": 2,
+        "defect_labels": [
+          0,
+          1
+        ],
+        "source_row_indexes": [
+          452,
+          528
+        ]
+      },
+      {
+        "feature_values": {
+          "cbo": 0,
+          "dit": 1,
+          "fanIn": 0,
+          "fanOut": 0,
+          "lcom": 0,
+          "noc": 0,
+          "numberOfAttributes": 11,
+          "numberOfLinesOfCode": 3,
+          "numberOfMethods": 1,
+          "numberOfPrivateAttributes": 1,
+          "numberOfPrivateMethods": 0,
+          "numberOfPublicAttributes": 10,
+          "numberOfPublicMethods": 1,
+          "rfc": 2,
+          "wmc": 1,
+          "numberOfVersionsUntil": 3,
+          "numberOfAuthorsUntil": 1,
+          "linesAddedUntil": 47,
+          "maxLinesAddedUntil": 47,
+          "avgLinesAddedUntil": 15.6667,
+          "linesRemovedUntil": 47,
+          "maxLinesRemovedUntil": 47,
+          "avgLinesRemovedUntil": 15.6667,
+          "codeChurnUntil": 0,
+          "maxCodeChurnUntil": 47,
+          "avgCodeChurnUntil": 0.0,
+          "ageWithRespectTo": 14.7143,
+          "weightedAgeWithRespectTo": 0.714286
+        },
+        "row_count": 2,
+        "defect_labels": [
+          0,
+          1
+        ],
+        "source_row_indexes": [
+          935,
+          1190
+        ]
+      }
+    ],
+    "valid_duplicate_rows_removed": 119,
+    "conflicting_rows_excluded": 19,
+    "cleaned_row_count": 5233,
+    "cleaned_class_distribution": {
+      "total": 5233,
+      "defective": 842,
+      "non_defective": 4391,
+      "defective_percentage": 16.0902,
+      "non_defective_percentage": 83.9098
+    }
+  },
+  "split_summary": {
+    "cleaned": {
+      "total": 5233,
+      "defective": 842,
+      "non_defective": 4391,
+      "defective_percentage": 16.0902,
+      "non_defective_percentage": 83.9098
+    },
+    "training": {
+      "total": 4186,
+      "defective": 674,
+      "non_defective": 3512,
+      "defective_percentage": 16.1013,
+      "non_defective_percentage": 83.8987
+    },
+    "testing": {
+      "total": 1047,
+      "defective": 168,
+      "non_defective": 879,
+      "defective_percentage": 16.0458,
+      "non_defective_percentage": 83.9542
+    }
+  },
+  "evaluation": {
+    "metrics": {
+      "accuracy": 0.8347659980897804,
+      "precision": 0.46987951807228917,
+      "recall": 0.23214285714285715,
+      "f1_score": 0.3107569721115538,
+      "roc_auc": 0.7699834768947398,
+      "pr_auc": 0.4184807297767121,
+      "mcc": 0.24737055850513526
+    },
+    "confusion_matrix": [
+      [
+        835,
+        44
+      ],
+      [
+        129,
+        39
+      ]
+    ]
+  },
+  "warnings": [
+    "Contradictory labels were found for identical feature vectors; the complete vectors were excluded before splitting."
+  ],
+  "artifacts": {
+    "model_path": "C:\\Users\\Muditha\\Documents\\GitHub\\ML_service_FastAPI\\Bug_Prediction\\model\\xgboost_bug_prediction.json",
+    "feature_schema_path": "C:\\Users\\Muditha\\Documents\\GitHub\\ML_service_FastAPI\\Bug_Prediction\\model\\feature_schema.json",
+    "metadata_path": "C:\\Users\\Muditha\\Documents\\GitHub\\ML_service_FastAPI\\Bug_Prediction\\model\\model_metadata.json"
+  }
+}
