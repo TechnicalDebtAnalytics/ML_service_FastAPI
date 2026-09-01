@@ -5,11 +5,15 @@ on:
     branches:
       - main
       - develop
+      - muditha/CloudAMQP
+      - muditha_CloudAMQP
 
   pull_request:
     branches:
       - main
       - develop
+      - muditha/CloudAMQP
+      - muditha_CloudAMQP
 
 jobs:
   test:

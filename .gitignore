@@ -1,10 +1,45 @@
 # =========================
+# Datasets and Raw Data
+# =========================
+dataset/
+datasets/
+data/
+raw_data/
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.jsonl
+
+# =========================
+# Model Weights & Large Checkpoints
+# =========================
+*.pt
+*.pth
+*.bin
+*.ckpt
+*.onnx
+# Note: If .pkl or .joblib models exceed GitHub's 100MB limit, track them via Git LFS or cloud storage (e.g. S3).
+
+# =========================
+# ML Experiment Logs & Tracking
+# =========================
+mlruns/
+wandb/
+runs/
+lightning_logs/
+tensorboard/
+*.tfevents*
+
+# =========================
 # Python virtual environment
 # =========================
 venv/
 env/
 .venv/
-
+ENV/
 
 # =========================
 # Python cache files
@@ -13,20 +48,20 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
 # =========================
 # Environment variables / secrets
 # =========================
 .env
 .env.*
-
+!.env.example
 
 # =========================
 # IDE files
 # =========================
 .idea/
 .vscode/
-
+*.swp
+*.swo
 
 # =========================
 # Testing and coverage
@@ -34,27 +69,27 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
-
+.tox/
 
 # =========================
-# Logs
+# Logs and Databases
 # =========================
 *.log
-
+*.sqlite
+*.sqlite3
+*.db
 
 # =========================
-# Build files
+# Build and Distribution files
 # =========================
 build/
 dist/
 *.egg-info/
 
-
 # =========================
 # Jupyter Notebook files
 # =========================
 .ipynb_checkpoints/
-
 
 # =========================
 # OS generated files
