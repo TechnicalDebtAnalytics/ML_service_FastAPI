@@ -12,8 +12,6 @@ raw_data/
 *.h5
 *.hdf5
 *.jsonl
-# Keep sample/keyword definitions if needed
-!app/models/satd_model/keywords/*.txt
 
 # =========================
 # Model Weights & Large Checkpoints
