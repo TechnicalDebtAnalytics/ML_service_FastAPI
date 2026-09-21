@@ -38,12 +38,10 @@ class Settings(BaseModel):
     SATD_MODEL_DIR: Path = BASE_DIR / "models" / "satd"
     BUG_MODEL_DIR: Path = BASE_DIR / "models" / "bug_prediction"
 
-    # SATD Model Artifacts
-    SATD_SVM_MODEL_FILE: str = "svm_satd_model.pkl"
-    SATD_WORD_TFIDF_FILE: str = "word_tfidf.pkl"
-    SATD_CHAR_TFIDF_FILE: str = "char_tfidf.pkl"
-    SATD_LABEL_ENCODER_FILE: str = "label_encoder.pkl"
-    SATD_FEATURES_FILE: str = "satd_features.pkl"
+    # SATD Model Artifacts (CodeBERT Transformer)
+    SATD_CONFIG_FILE: str = "config.json"
+    SATD_MODEL_FILE: str = "model.safetensors"
+    SATD_TOKENIZER_FILE: str = "tokenizer.json"
 
     # Bug Prediction Model Artifacts
     BUG_MODEL_FILE: str = "xgboost_bug_prediction.json"
