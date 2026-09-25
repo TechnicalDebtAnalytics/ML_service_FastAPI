@@ -86,7 +86,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/debtlens-ml-service
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deployment' }}
             type=ref,event=branch
             type=sha,format=short
 
