@@ -1,47 +1,64 @@
-"""Wrapper and loader for the SATD Transformer (CodeBERT / RoBERTa) classification model."""
+"""Wrapper and loader for the SATD TF-IDF + XGBoost classification model."""
 
+import json
 from pathlib import Path
 from typing import Any
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import joblib
+import xgboost as xgb
 
 from app.config.settings import settings
 
 
 class SATDModelWrapper:
-    """Manages SATD CodeBERT transformer model loading and inference."""
+    """Manages SATD TF-IDF feature extraction and XGBoost model inference."""
 
     def __init__(self, model_dir: Path | str | None = None):
         self.model_dir = Path(model_dir) if model_dir else settings.SATD_MODEL_DIR
-        self.tokenizer: Any = None
-        self.model: Any = None
-        self.device: torch.device | None = None
+        self.vectorizer: Any = None
+        self.model: xgb.XGBClassifier | None = None
         self.id2label: dict[int | str, str] = {}
         self.is_loaded: bool = False
 
     def load(self) -> None:
-        """Load tokenizer and model artifacts into memory."""
-        model_path = str(self.model_dir)
-        if not (self.model_dir / "config.json").exists():
-            raise FileNotFoundError(f"SATD model config not found in: {self.model_dir}")
+        """Load TF-IDF vectorizer, XGBoost model, and class mappings into memory."""
+        vectorizer_path = self.model_dir / settings.SATD_VECTORIZER_FILE
+        model_path = self.model_dir / settings.SATD_MODEL_FILE
+        classes_path = self.model_dir / settings.SATD_CLASSES_FILE
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
-        self.model.to(self.device)
-        self.model.eval()
+        if not vectorizer_path.exists():
+            raise FileNotFoundError(f"SATD TF-IDF vectorizer not found: {vectorizer_path}")
+        if not model_path.exists():
+            raise FileNotFoundError(f"SATD XGBoost model artifact not found: {model_path}")
 
-        if hasattr(self.model.config, "id2label") and self.model.config.id2label:
-            self.id2label = self.model.config.id2label
-        else:
+        # 1. Load TF-IDF Vectorizer
+        self.vectorizer = joblib.load(str(vectorizer_path))
+
+        # 2. Load XGBoost Model
+        classifier = xgb.XGBClassifier()
+        classifier.load_model(str(model_path))
+        self.model = classifier
+
+        # 3. Load Class Mappings
+        if classes_path.exists():
+            try:
+                classes_data = json.loads(classes_path.read_text(encoding="utf-8"))
+                if "id2label" in classes_data:
+                    self.id2label = {int(k): str(v) for k, v in classes_data["id2label"].items()}
+                elif "classes" in classes_data:
+                    self.id2label = {int(i): str(cls_name) for i, cls_name in enumerate(classes_data["classes"])}
+            except Exception:
+                pass
+
+        if not self.id2label:
             self.id2label = {
-                0: "non_debt",
-                1: "code/design_debt",
-                2: "requirement_debt",
-                3: "defect_debt",
-                4: "test_debt",
-                5: "documentation_debt",
+                0: "code/design_debt",
+                1: "defect_debt",
+                2: "documentation_debt",
+                3: "non_debt",
+                4: "requirement_debt",
+                5: "test_debt",
             }
+
         self.is_loaded = True
 
     def predict_comment(self, comment: str) -> dict[str, Any]:
@@ -57,10 +74,10 @@ class SATDModelWrapper:
     def predict_comments(
         self,
         comments: list[str],
-        batch_size: int = 32,
+        batch_size: int = 256,
     ) -> list[dict[str, Any]]:
         """Classify a batch of comments and return predictions."""
-        if not self.is_loaded:
+        if not self.is_loaded or self.model is None or self.vectorizer is None:
             raise RuntimeError("SATD model is not loaded. Call load() first.")
 
         if not comments:
@@ -90,21 +107,15 @@ class SATDModelWrapper:
                     }
 
             if valid_texts:
-                inputs = self.tokenizer(
-                    valid_texts,
-                    padding=True,
-                    truncation=True,
-                    max_length=512,
-                    return_tensors="pt",
-                ).to(self.device)
+                # 1. Transform text with TF-IDF vectorizer
+                tfidf_features = self.vectorizer.transform(valid_texts)
 
-                with torch.no_grad():
-                    outputs = self.model(**inputs)
-                    probs = torch.softmax(outputs.logits, dim=-1).cpu().numpy()
+                # 2. Predict probability distribution
+                probs = self.model.predict_proba(tfidf_features)
 
                 for orig_idx, comment_text, prob_dist in zip(valid_indices, valid_texts, probs):
                     pred_id = int(prob_dist.argmax())
-                    label = self.id2label.get(str(pred_id), self.id2label.get(pred_id, f"LABEL_{pred_id}"))
+                    label = self.id2label.get(pred_id, self.id2label.get(str(pred_id), f"LABEL_{pred_id}"))
                     confidence = float(prob_dist[pred_id])
                     confidence = max(0.0, min(1.0, round(confidence, 4)))
 

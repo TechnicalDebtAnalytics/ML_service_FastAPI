@@ -26,5 +26,4 @@ tzdata==2026.3
 uvicorn==0.52.1
 xgboost>=2.0.0
 pytest==8.4.1
-torch>=2.0.0
-transformers>=4.30.0
+pytest-cov==7.0.0
