@@ -1,8 +1,7 @@
-"""Isolated unit tests for the SATD and bug-prediction model wrappers."""
+"""Unit tests for SATD (TF-IDF + XGBoost) and Bug Prediction model wrappers."""
 
 import json
-from unittest.mock import Mock, call, patch
-
+from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
@@ -12,152 +11,111 @@ from app.models.satd_model_wrapper import SATDModelWrapper
 from app.preprocessing.bug_preprocessor import CANONICAL_FEATURES
 
 
-SATD_FILENAMES = [
-    settings.SATD_SVM_MODEL_FILE,
-    settings.SATD_WORD_TFIDF_FILE,
-    settings.SATD_CHAR_TFIDF_FILE,
-    settings.SATD_LABEL_ENCODER_FILE,
-    settings.SATD_FEATURES_FILE,
-]
+# ---------------------------------------------------------------------------
+# SATDModelWrapper Tests (TF-IDF + XGBoost)
+# ---------------------------------------------------------------------------
 
+def test_satd_load_reads_vectorizer_model_and_classes(tmp_path) -> None:
+    vec_path = tmp_path / settings.SATD_VECTORIZER_FILE
+    model_path = tmp_path / settings.SATD_MODEL_FILE
+    classes_path = tmp_path / settings.SATD_CLASSES_FILE
 
-def test_satd_load_reads_all_artifacts_and_marks_wrapper_loaded(tmp_path) -> None:
-    for filename in SATD_FILENAMES:
-        (tmp_path / filename).touch()
-    artifacts = [Mock(name="model"), Mock(name="word"), Mock(name="char"), Mock(name="encoder"), {"DESIGN": {}}]
+    vec_path.touch()
+    model_path.touch()
+    classes_payload = {"id2label": {"0": "code/design_debt", "1": "non_debt"}}
+    classes_path.write_text(json.dumps(classes_payload), encoding="utf-8")
+
+    classifier = Mock()
+    vectorizer_mock = Mock()
     wrapper = SATDModelWrapper(tmp_path)
 
-    with patch("app.models.satd_model_wrapper.joblib.load", side_effect=artifacts) as load:
+    with (
+        patch("app.models.satd_model_wrapper.joblib.load", return_value=vectorizer_mock) as mock_joblib,
+        patch("app.models.satd_model_wrapper.xgb.XGBClassifier", return_value=classifier) as classifier_type,
+    ):
         wrapper.load()
 
-    assert load.call_args_list == [call(tmp_path / filename) for filename in SATD_FILENAMES]
-    assert wrapper.model is artifacts[0]
-    assert wrapper.word_vectorizer is artifacts[1]
-    assert wrapper.char_vectorizer is artifacts[2]
-    assert wrapper.encoder is artifacts[3]
-    assert wrapper.satd_features == artifacts[4]
+    mock_joblib.assert_called_once_with(str(vec_path))
+    classifier_type.assert_called_once_with()
+    classifier.load_model.assert_called_once_with(str(model_path))
     assert wrapper.is_loaded is True
+    assert wrapper.id2label == {0: "code/design_debt", 1: "non_debt"}
 
 
-def test_satd_load_rejects_first_missing_artifact_without_loading_anything(tmp_path) -> None:
+def test_satd_load_rejects_missing_vectorizer_or_model(tmp_path) -> None:
     wrapper = SATDModelWrapper(tmp_path)
-
-    with (
-        patch("app.models.satd_model_wrapper.joblib.load") as load,
-        pytest.raises(FileNotFoundError, match="SATD model artifact not found"),
-    ):
+    with pytest.raises(FileNotFoundError, match="SATD TF-IDF vectorizer not found"):
         wrapper.load()
 
-    load.assert_not_called()
-    assert wrapper.is_loaded is False
+    # Now create vectorizer but omit model
+    (tmp_path / settings.SATD_VECTORIZER_FILE).touch()
+    with patch("app.models.satd_model_wrapper.joblib.load", return_value=Mock()):
+        with pytest.raises(FileNotFoundError, match="SATD XGBoost model artifact not found"):
+            wrapper.load()
 
 
-def test_satd_load_propagates_corrupt_artifact_failure_and_stays_unloaded(tmp_path) -> None:
-    for filename in SATD_FILENAMES:
-        (tmp_path / filename).touch()
-    wrapper = SATDModelWrapper(tmp_path)
+def test_satd_predict_single_comment() -> None:
+    wrapper = SATDModelWrapper()
+    wrapper.is_loaded = True
+    wrapper.vectorizer = Mock()
+    wrapper.model = Mock()
+    wrapper.id2label = {0: "code/design_debt", 1: "non_debt"}
 
-    with (
-        patch("app.models.satd_model_wrapper.joblib.load", side_effect=ValueError("corrupt pickle")),
-        pytest.raises(ValueError, match="corrupt pickle"),
-    ):
-        wrapper.load()
+    wrapper.vectorizer.transform.return_value = object()
+    wrapper.model.predict_proba.return_value = np.array([[0.85, 0.15]])
 
-    assert wrapper.is_loaded is False
-
-
-def test_satd_predict_rejects_unloaded_model() -> None:
-    with pytest.raises(RuntimeError, match=r"SATD model is not loaded\. Call load\(\) first"):
-        SATDModelWrapper().predict_comment("// TODO")
+    res = wrapper.predict_comment("TODO: refactor this method")
+    assert res["comment"] == "TODO: refactor this method"
+    assert res["category"] == "code/design_debt"
+    assert res["confidence_score"] == 0.85
+    assert res["is_debt"] is True
 
 
-def test_satd_predict_maps_multiclass_label_confidence_and_features() -> None:
-    wrapper = loaded_satd_wrapper()
-    features = object()
-    wrapper.model.predict.return_value = np.array([2])
-    wrapper.model.decision_function.return_value = np.array([[1.0, 3.0]])
-    wrapper.encoder.inverse_transform.return_value = np.array(["DESIGN_DEBT"])
+@pytest.mark.parametrize("label,expected_debt", [
+    ("non_debt", False),
+    ("clean", False),
+    ("without_classification", False),
+    ("code/design_debt", True),
+    ("defect_debt", True),
+])
+def test_satd_predict_maps_debt_status(label: str, expected_debt: bool) -> None:
+    wrapper = SATDModelWrapper()
+    wrapper.is_loaded = True
+    wrapper.vectorizer = Mock()
+    wrapper.model = Mock()
+    wrapper.id2label = {0: label}
 
-    with (
-        patch("app.models.satd_model_wrapper.clean_comment", return_value="todo refactor") as clean,
-        patch("app.models.satd_model_wrapper.build_satd_feature_vector", return_value=features) as build,
-    ):
-        result = wrapper.predict_comment("// TODO refactor")
+    wrapper.vectorizer.transform.return_value = object()
+    wrapper.model.predict_proba.return_value = np.array([[0.90]])
 
-    clean.assert_called_once_with("// TODO refactor")
-    build.assert_called_once_with(
-        "todo refactor", wrapper.word_vectorizer, wrapper.char_vectorizer, wrapper.satd_features
-    )
-    wrapper.model.predict.assert_called_once_with(features)
-    wrapper.encoder.inverse_transform.assert_called_once_with(np.array([2]))
-    assert result == {
-        "comment": "// TODO refactor",
-        "category": "DESIGN_DEBT",
-        "confidence_score": 0.8808,
-        "is_debt": True,
-    }
+    res = wrapper.predict_comment("sample text")
+    assert res["category"] == label
+    assert res["is_debt"] is expected_debt
 
 
-@pytest.mark.parametrize("label", ["WITHOUT_CLASSIFICATION", "non_debt", "Clean"])
-def test_satd_predict_maps_non_debt_labels_case_insensitively(label: str) -> None:
-    wrapper = loaded_satd_wrapper()
-    wrapper.model.predict.return_value = np.array([0])
-    wrapper.model.decision_function.return_value = np.array([0.0])
-    wrapper.encoder.inverse_transform.return_value = np.array([label])
+def test_satd_predict_empty_or_none_comment() -> None:
+    wrapper = SATDModelWrapper()
+    wrapper.is_loaded = True
+    wrapper.vectorizer = Mock()
+    wrapper.model = Mock()
+    wrapper.id2label = {0: "non_debt"}
 
-    with (
-        patch("app.models.satd_model_wrapper.clean_comment", return_value="ordinary comment"),
-        patch("app.models.satd_model_wrapper.build_satd_feature_vector", return_value=object()),
-    ):
-        result = wrapper.predict_comment("ordinary comment")
-
-    assert result["category"] == label
-    assert result["confidence_score"] == 0.5
-    assert result["is_debt"] is False
+    res = wrapper.predict_comment("")
+    assert res["category"] == "non_debt"
+    assert res["confidence_score"] == 1.0
+    assert res["is_debt"] is False
 
 
-def test_satd_predict_returns_default_without_inference_for_empty_or_none_input() -> None:
-    wrapper = loaded_satd_wrapper()
-
-    assert wrapper.predict_comment(None) == {
-        "comment": None,
-        "category": "WITHOUT_CLASSIFICATION",
-        "confidence_score": 1.0,
-        "is_debt": False,
-    }
-    wrapper.model.predict.assert_not_called()
-    wrapper.encoder.inverse_transform.assert_not_called()
+def test_satd_predict_rejects_unloaded() -> None:
+    wrapper = SATDModelWrapper()
+    wrapper.is_loaded = False
+    with pytest.raises(RuntimeError, match="SATD model is not loaded"):
+        wrapper.predict_comments(["hello"])
 
 
-def test_satd_predict_uses_fallback_confidence_when_decision_function_fails() -> None:
-    wrapper = loaded_satd_wrapper()
-    wrapper.model.predict.return_value = np.array([1])
-    wrapper.model.decision_function.side_effect = RuntimeError("decision unavailable")
-    wrapper.encoder.inverse_transform.return_value = np.array(["CODE_DEBT"])
-
-    with (
-        patch("app.models.satd_model_wrapper.clean_comment", return_value="fix later"),
-        patch("app.models.satd_model_wrapper.build_satd_feature_vector", return_value=object()),
-    ):
-        result = wrapper.predict_comment("fix later")
-
-    assert result["confidence_score"] == 0.85
-    assert result["is_debt"] is True
-
-
-def test_satd_predict_propagates_feature_or_model_failure() -> None:
-    wrapper = loaded_satd_wrapper()
-
-    with (
-        patch("app.models.satd_model_wrapper.clean_comment", return_value="todo"),
-        patch(
-            "app.models.satd_model_wrapper.build_satd_feature_vector",
-            side_effect=ValueError("invalid feature shape"),
-        ),
-        pytest.raises(ValueError, match="invalid feature shape"),
-    ):
-        wrapper.predict_comment("TODO")
-
+# ---------------------------------------------------------------------------
+# BugModelWrapper Tests (XGBoost)
+# ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
     ("schema_payload", "expected_schema"),
@@ -299,14 +257,3 @@ def test_bug_predict_propagates_invalid_input_and_booster_failures() -> None:
         wrapper.model.get_booster.return_value.predict.side_effect = RuntimeError("booster failed")
         with pytest.raises(RuntimeError, match="booster failed"):
             wrapper.predict_class({"cbo": 1})
-
-
-def loaded_satd_wrapper() -> SATDModelWrapper:
-    wrapper = SATDModelWrapper()
-    wrapper.is_loaded = True
-    wrapper.model = Mock()
-    wrapper.word_vectorizer = Mock()
-    wrapper.char_vectorizer = Mock()
-    wrapper.encoder = Mock()
-    wrapper.satd_features = {"DESIGN": {"todo": 1.0}}
-    return wrapper
