@@ -56,10 +56,19 @@ class RabbitMQConsumer:
 
             job_request = PredictionJobRequest.model_validate(raw_payload)
             response = prediction_service.predict_job(job_request)
+            published = rabbitmq_publisher.publish_result(
+                response.model_dump(by_alias=True)
+            )
 
-            if not rabbitmq_publisher.publish_result(response.model_dump(by_alias=True)):
-                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
-                logger.warning("Result publishing failed; requeued job #%s", job_request.job_id)
+            if not published:
+                logger.warning(
+                    "Failed to publish result for job #%s. Requeuing message.",
+                    job_request.job_id,
+                )
+                channel.basic_nack(
+                    delivery_tag=method.delivery_tag,
+                    requeue=True
+                )
                 return
             channel.basic_ack(delivery_tag=method.delivery_tag)
             logger.info("Processed and acknowledged job #%s", job_request.job_id)
