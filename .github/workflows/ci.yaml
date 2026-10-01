@@ -1,35 +1,53 @@
-name: FastAPI ML Service CI
+name: ML Service CI/CD
 
 on:
   push:
     branches:
       - main
       - develop
+      - development
       - muditha/CloudAMQP
       - muditha_CloudAMQP
-
+      - Muditha
+      - deployment
   pull_request:
     branches:
       - main
       - develop
+      - development
       - muditha/CloudAMQP
       - muditha_CloudAMQP
+      - Muditha
+      - deployment
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Continuous Integration: Build & Test
+  # ---------------------------------------------------------------------------
   test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run test suite
         env:
@@ -44,7 +62,7 @@ jobs:
     name: Build & Push Docker Image
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deployment')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deployment' || github.ref == 'refs/heads/develop')
 
     steps:
       - name: Checkout source code
