@@ -2,6 +2,7 @@
 
 import json
 import logging
+import ssl
 from typing import Any
 import pika
 
@@ -19,6 +20,7 @@ class RabbitMQPublisher:
         self.username = settings.RABBITMQ_USERNAME
         self.password = settings.RABBITMQ_PASSWORD
         self.vhost = settings.RABBITMQ_VHOST
+        self.ssl_enabled = settings.RABBITMQ_SSL_ENABLED
         self.queue = settings.ML_RESULT_QUEUE
 
     def _get_connection(self) -> pika.BlockingConnection:
@@ -28,6 +30,7 @@ class RabbitMQPublisher:
             port=self.port,
             virtual_host=self.vhost,
             credentials=credentials,
+            ssl_options=pika.SSLOptions(ssl.create_default_context(), self.host) if self.ssl_enabled else None,
             connection_attempts=3,
             retry_delay=2,
             socket_timeout=5,

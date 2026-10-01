@@ -22,10 +22,5 @@ def health_check() -> dict[str, object]:
             "satd_model_loaded": satd_loaded,
             "bug_model_loaded": bug_loaded,
         },
-        "rabbitmq": {
-            "enabled": settings.RABBITMQ_ENABLED,
-            "host": settings.RABBITMQ_HOST,
-            "job_queue": settings.ML_JOB_QUEUE,
-            "result_queue": settings.ML_RESULT_QUEUE,
-        }
+        "rabbitmq_enabled": settings.RABBITMQ_ENABLED,
     }

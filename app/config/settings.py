@@ -54,6 +54,7 @@ class Settings(BaseModel):
     RABBITMQ_USERNAME: str = Field(default_factory=lambda: os.getenv("RABBITMQ_USERNAME", "guest"))
     RABBITMQ_PASSWORD: str = Field(default_factory=lambda: os.getenv("RABBITMQ_PASSWORD", "guest"))
     RABBITMQ_VHOST: str = Field(default_factory=lambda: os.getenv("RABBITMQ_VHOST", "/"))
+    RABBITMQ_SSL_ENABLED: bool = Field(default_factory=lambda: os.getenv("RABBITMQ_SSL_ENABLED", "false").lower() in ("true", "1"))
     RABBITMQ_ENABLED: bool = Field(default_factory=lambda: os.getenv("RABBITMQ_ENABLED", "true").lower() in ("true", "1"))
 
     # Exact Queue Names created in RabbitMQ
