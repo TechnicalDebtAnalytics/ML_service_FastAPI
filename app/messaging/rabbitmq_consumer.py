@@ -2,6 +2,7 @@
 
 import json
 import logging
+import ssl
 import threading
 import time
 from typing import Any
@@ -24,6 +25,7 @@ class RabbitMQConsumer:
         self.username = settings.RABBITMQ_USERNAME
         self.password = settings.RABBITMQ_PASSWORD
         self.vhost = settings.RABBITMQ_VHOST
+        self.ssl_enabled = settings.RABBITMQ_SSL_ENABLED
         self.queue = settings.ML_JOB_QUEUE
         self._thread: threading.Thread | None = None
         self._stop_event = threading.Event()
@@ -35,6 +37,7 @@ class RabbitMQConsumer:
             port=self.port,
             virtual_host=self.vhost,
             credentials=credentials,
+            ssl_options=pika.SSLOptions(ssl.create_default_context(), self.host) if self.ssl_enabled else None,
             heartbeat=60,
             blocked_connection_timeout=300,
         )
@@ -54,7 +57,10 @@ class RabbitMQConsumer:
             job_request = PredictionJobRequest.model_validate(raw_payload)
             response = prediction_service.predict_job(job_request)
 
-            rabbitmq_publisher.publish_result(response.model_dump(by_alias=True))
+            if not rabbitmq_publisher.publish_result(response.model_dump(by_alias=True)):
+                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                logger.warning("Result publishing failed; requeued job #%s", job_request.job_id)
+                return
             channel.basic_ack(delivery_tag=method.delivery_tag)
             logger.info("Processed and acknowledged job #%s", job_request.job_id)
 
