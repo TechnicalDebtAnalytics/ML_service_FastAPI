@@ -4,30 +4,28 @@ on:
   push:
     branches:
       - main
+      - deployment
       - develop
       - development
       - muditha/CloudAMQP
       - muditha_CloudAMQP
       - Muditha
-      - deployment
+
   pull_request:
     branches:
       - main
+      - deployment
       - develop
       - development
       - muditha/CloudAMQP
       - muditha_CloudAMQP
       - Muditha
-      - deployment
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # 1. Continuous Integration: Build & Test
-  # ---------------------------------------------------------------------------
   test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -55,14 +53,11 @@ jobs:
         run: |
           pytest -v
 
-  # ---------------------------------------------------------------------------
-  # 2. Continuous Delivery: Build & Push Docker Image
-  # ---------------------------------------------------------------------------
   docker:
     name: Build & Push Docker Image
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deployment' || github.ref == 'refs/heads/develop')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deployment')
 
     steps:
       - name: Checkout source code
@@ -80,13 +75,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/debtlens-ml-service
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deployment' }}
+            type=raw,value=latest
             type=ref,event=branch
             type=sha,format=short
 
@@ -99,9 +94,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  # ---------------------------------------------------------------------------
-  # 3. Continuous Deployment: SSH to VM & Update Container
-  # ---------------------------------------------------------------------------
   deploy:
     name: Deploy to Remote VM
     needs: docker
@@ -118,7 +110,8 @@ jobs:
           port: ${{ secrets.VM_PORT || 22 }}
           script: |
             cd ${{ secrets.DEPLOY_PATH || '/home/ubuntu/debtlens-deployment' }}
-            echo "${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
+            git pull --ff-only origin main
+            echo "${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull ml-service
             docker compose up -d --force-recreate --no-deps ml-service
             docker image prune -f

@@ -15,6 +15,7 @@ def test_cfg_05_settings_defaults_overrides_and_disabled_rabbitmq():
     assert defaults.RABBITMQ_USERNAME == "guest"
     assert defaults.RABBITMQ_PASSWORD == "guest"
     assert defaults.RABBITMQ_VHOST == "/"
+    assert defaults.RABBITMQ_SSL_ENABLED is False
     assert defaults.RABBITMQ_ENABLED is True
     assert defaults.ML_JOB_QUEUE == "ML_job_cretion.queue"
     assert defaults.ML_RESULT_QUEUE == "ML_job_results.queue"
@@ -26,6 +27,7 @@ def test_cfg_05_settings_defaults_overrides_and_disabled_rabbitmq():
         "RABBITMQ_USERNAME": "synthetic-user",
         "RABBITMQ_PASSWORD": "synthetic-password",
         "RABBITMQ_VHOST": "/synthetic",
+        "RABBITMQ_SSL_ENABLED": "true",
         "RABBITMQ_ENABLED": "false",
         "ML_JOB_QUEUE": "synthetic.ml.jobs",
         "ML_RESULT_QUEUE": "synthetic.ml.results",
@@ -39,6 +41,7 @@ def test_cfg_05_settings_defaults_overrides_and_disabled_rabbitmq():
     assert configured.RABBITMQ_USERNAME == "synthetic-user"
     assert configured.RABBITMQ_PASSWORD == "synthetic-password"
     assert configured.RABBITMQ_VHOST == "/synthetic"
+    assert configured.RABBITMQ_SSL_ENABLED is True
     assert configured.RABBITMQ_ENABLED is False
     assert configured.ML_JOB_QUEUE == "synthetic.ml.jobs"
     assert configured.ML_RESULT_QUEUE == "synthetic.ml.results"
